@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Assinatura - Cajueiro Motos</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; padding: 15px; margin: 0; }
+
+        /* Estilo da Logo */
+        .logo-empresa { max-width: 180px; height: auto; margin-bottom: 10px; }
+
+        .instrucao { font-size: 14px; color: #555; margin-bottom: 15px; }
+
+        /* Caixa que mostra o PDF (Imagem) */
+        .pdf-preview {
+            background-color: white; border: 1px solid #ccc; border-radius: 8px; padding: 5px;
+            width: 100%; max-width: 500px; margin: 0 auto 20px auto; box-sizing: border-box;
+            max-height: 400px; overflow-y: auto;
+        }
+        .pdf-preview img { width: 100%; height: auto; display: block; }
+
+        /* Canvas de Assinatura */
+        .wrapper { background-color: white; border: 2px dashed #999; border-radius: 8px; width: 100%; max-width: 500px; height: 150px; margin: 0 auto 20px auto; position: relative; }
+        canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+
+        /* Botões */
+        .botoes { display: flex; gap: 10px; justify-content: center; max-width: 500px; margin: 0 auto; }
+        button { padding: 15px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; flex: 1; }
+        #limpar { background-color: #ddd; color: #333; }
+        #enviar { background-color: #cc0000; color: white; }
+    </style>
+</head>
+<body>
+
+    <img src="/static/logo.webp" alt="Logo Cajueiro Motos" class="logo-empresa">
+
+    <div class="instrucao">Pedido #{{ pedido_id }}</div>
+
+    <div class="pdf-preview">
+        <p style="font-size: 12px; color: #888; margin: 5px 0 10px 0;">Confira os dados do seu brinde (Capacete) abaixo:</p>
+        <img src="/preview_pdf/{{ pedido_id }}" alt="Documento do Pedido">
+    </div>
+
+    <div class="instrucao">Assine no quadro abaixo para autorizar o envio do seu brinde:</div>
+
+    <div class="wrapper">
+        <canvas id="signature-pad"></canvas>
+    </div>
+
+    <div class="botoes">
+        <button id="limpar">Limpar</button>
+        <button id="enviar">Confirmar</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script>
+        const canvas = document.getElementById('signature-pad');
+
+        function resizeCanvas() {
+            const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+        }
+        window.onresize = resizeCanvas;
+        resizeCanvas();
+
+        const signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgba(255, 255, 255, 0)' });
+
+        document.getElementById('limpar').addEventListener('click', () => signaturePad.clear());
+
+        document.getElementById('enviar').addEventListener('click', async () => {
+            if (signaturePad.isEmpty()) {
+                alert("Por favor, faça sua assinatura.");
+                return;
+            }
+
+            const btnEnviar = document.getElementById('enviar');
+            btnEnviar.innerText = "Enviando...";
+            btnEnviar.disabled = true;
+
+            const assinaturaBase64 = signaturePad.toDataURL('image/png');
+
+            try {
+                const response = await fetch('/api/salvar_assinatura', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pedido_id: "{{ pedido_id }}",
+                        assinatura: assinaturaBase64
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert("Obrigado! Assinatura recebida com sucesso.");
+                    signaturePad.clear();
+                    document.body.innerHTML = "<h3 style='color:green; margin-top:50px;'>Pedido Assinado!</h3><p>Pode fechar esta tela.</p>";
+                } else {
+                    alert("Erro ao enviar: " + result.erro);
+                }
+            } catch (error) {
+                alert("Erro de conexão.");
+            } finally {
+                if (btnEnviar) {
+                    btnEnviar.innerText = "Confirmar";
+                    btnEnviar.disabled = false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

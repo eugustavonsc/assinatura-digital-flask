@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDFs Assinados - Cajueiro Motos</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; text-align: center; margin: 0; }
+        .painel { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin: 20px auto; text-align: left; }
+        .logo { max-width: 150px; display: block; margin: 0 auto 20px auto; }
+        h2 { color: #cc0000; text-align: center; margin-top: 0; font-size: 22px; margin-bottom: 25px; }
+        .lista { list-style: none; padding: 0; margin: 0; }
+        .item-lista { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; background-color: #fafafa; margin-bottom: 10px; border-radius: 6px; flex-wrap: wrap; gap: 10px; }
+        .pedido-numero { font-weight: bold; font-size: 16px; color: #333; }
+        .botoes-acao { display: flex; gap: 10px; }
+        
+        /* Botão Verde */
+        .btn-baixar { background-color: #28a745; color: white; text-decoration: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; font-size: 14px; transition: 0.3s; }
+        .btn-baixar:hover { background-color: #218838; }
+        
+        /* Botão Vermelho */
+        .btn-apagar { background-color: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.3s; }
+        .btn-apagar:hover { background-color: #c82333; }
+        
+        .voltar { display: block; text-align: center; margin-top: 25px; color: #666; text-decoration: none; font-weight: bold; font-size: 14px; }
+        .voltar:hover { color: #cc0000; }
+        .vazio { text-align: center; color: #888; padding: 20px; font-style: italic; background-color: #f9f9f9; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+    <div class="painel">
+        <img src="/static/logo.webp" alt="Cajueiro Motos" class="logo">
+        <h2>Documentos Assinados</h2>
+        
+        <ul class="lista">
+            {% if arquivos %}
+                {% for arquivo in arquivos %}
+                <li class="item-lista">
+                    <span class="pedido-numero">Pedido #{{ arquivo.pedido_id }}</span>
+                    <div class="botoes-acao">
+                        <a href="/baixar/{{ arquivo.nome_arquivo }}" class="btn-baixar">⬇️ Baixar</a>
+                        
+                        <form action="/apagar/{{ arquivo.nome_arquivo }}" method="POST" style="margin: 0;" onsubmit="return confirm('Tem certeza que deseja apagar o pedido #{{ arquivo.pedido_id }}? Esta ação não pode ser desfeita.');">
+                            <button type="submit" class="btn-apagar">🗑️ Apagar</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            {% else %}
+                <div class="vazio">Nenhum documento assinado no momento.</div>
+            {% endif %}
+        </ul>
+
+        <a href="/" class="voltar">⬅️ Voltar ao Painel Principal</a>
+    </div>
+
+</body>
+</html>

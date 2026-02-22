@@ -1,0 +1,9 @@
+# Ignorar senhas e variáveis de ambiente
+.env
+
+# Ignorar os PDFs dos clientes e a pasta de uploads
+uploads/
+
+# Ignorar arquivos temporários do Python
+__pycache__/
+*.pyc
